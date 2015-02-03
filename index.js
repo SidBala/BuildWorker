@@ -28,7 +28,7 @@ if(autodiscoverBeanstalkd) {
                 
                 etcd.watch('/beanstalkd', function(err, result) {
                     var beanstalkEndpoint = result.node.value ;
-
+                    log.debug('Found beanstalkd instance at ' + beanstalkEndpoint);
                     connectToQueuesAndStartWorking(beanstalkEndpoint);
                 });
             }
@@ -36,6 +36,7 @@ if(autodiscoverBeanstalkd) {
         else
         {
             var beanstalkEndpoint = result.node.value ;
+            log.debug('Found beanstalkd instance at ' + beanstalkEndpoint);
             connectToQueuesAndStartWorking(beanstalkEndpoint);
         }
     });
