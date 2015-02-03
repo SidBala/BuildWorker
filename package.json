@@ -18,6 +18,7 @@
   "homepage": "https://github.com/SidBala/BuildWorker",
   "dependencies": {
     "fivebeans": "^1.1.1",
+    "log-colors": "^1.0.0",
     "node-etcd": "^3.0.2"
   }
 }
