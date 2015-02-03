@@ -13,10 +13,10 @@ var log = require('log-colors');
 var etcd = new Etcd(COREOS_ETCD_ENDPOINT, COREOS_ETCD_PORT);
 
 // Set this to true if you want to locally spin up beanstalk
-var isLocal = false;
+var autodiscoverBeanstalkd = true;
 var localBeanstalkEndpoint = 'localhost';
 
-if(isLocal) {
+if(autodiscoverBeanstalkd) {
     // Connect to etcd and retrieve the beanstalkd endpoint ipaddr
     etcd.get("/beanstalkd", function(err, result) {
         if (err) {
