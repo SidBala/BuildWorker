@@ -10,31 +10,38 @@ var Etcd = require('node-etcd');
 var fivebeans = require('fivebeans');
 
 var log = require('log-colors');
-
 var etcd = new Etcd(COREOS_ETCD_ENDPOINT, COREOS_ETCD_PORT);
 
-// Connect to etcd and retrieve the beanstalkd endpoint ipaddr
-etcd.get("/beanstalkd", function(err, result) {
-    if (err) {
-        // Key is not set yet
-        if (err.errorCode == 100)
-        {
-            // In this case, we watch for the key to be set
-            log.error("Key not set yet - Beanstalk is probably not running. Will wait on it");
-            
-            etcd.watch('/beanstalkd', function(err, result) {
-                var beanstalkEndpoint = result.node.value ;
+// Set this to true if you want to locally spin up beanstalk
+var isLocal = false;
+var localBeanstalkEndpoint = 'localhost';
 
-                connectToQueuesAndStartWorking(beanstalkEndpoint);
-            });
+if(isLocal) {
+    // Connect to etcd and retrieve the beanstalkd endpoint ipaddr
+    etcd.get("/beanstalkd", function(err, result) {
+        if (err) {
+            // Key is not set yet
+            if (err.errorCode == 100)
+            {
+                // In this case, we watch for the key to be set
+                log.error("Key not set yet - Beanstalk is probably not running. Will wait on it");
+                
+                etcd.watch('/beanstalkd', function(err, result) {
+                    var beanstalkEndpoint = result.node.value ;
+
+                    connectToQueuesAndStartWorking(beanstalkEndpoint);
+                });
+            }
         }
-    }
-    else
-    {
-        var beanstalkEndpoint = result.node.value ;
-        connectToQueuesAndStartWorking(beanstalkEndpoint);
-    }
-});
+        else
+        {
+            var beanstalkEndpoint = result.node.value ;
+            connectToQueuesAndStartWorking(beanstalkEndpoint);
+        }
+    });
+} else {
+    connectToQueuesAndStartWorking(localBeanstalkEndpoint);
+}
 
 var jobClient;
 var resultClient;
@@ -45,6 +52,7 @@ function connectToQueuesAndStartWorking (endpoint) {
     jobClient
         .on('connect', function()
         {
+            log.debug('Job Tube connected successfully');
             jobClient.watch(BEANSTALK_WORKTUBE_NAME, function(err, numwatched) {
                 jobClient.reserve(function(err, jobid, payload) {
                     if(!err) {
@@ -58,6 +66,7 @@ function connectToQueuesAndStartWorking (endpoint) {
     resultClient
         .on('connect', function()
         {
+            log.debug('Result Tube connected successfully');
             resultClient.use(BEANSTALK_RESULTTUBE_NAME, function(err, tubename) {
                 // TODO: Synchronize such that this happens before any jobs are done
             });
