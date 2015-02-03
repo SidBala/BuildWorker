@@ -5,8 +5,8 @@ Requires=docker.service
 
 [Service]
 TimeoutStartSec=0
-ExecStartPre=-/usr/bin/docker kill builder
-ExecStartPre=-/usr/bin/docker rm builder
-ExecStartPre=/usr/bin/docker pull lasr/builder
-ExecStart=/usr/bin/docker run --name builder lasr/builder
-ExecStop=/usr/bin/docker stop builder
+ExecStartPre=-/usr/bin/docker kill builder-%i
+ExecStartPre=-/usr/bin/docker rm builder-%i
+ExecStartPre=/usr/bin/docker pull lasr/buildworker
+ExecStart=/usr/bin/docker run --name builder-%i lasr/buildworker
+ExecStop=/usr/bin/docker stop builder-%i

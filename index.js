@@ -54,13 +54,8 @@ function connectToQueuesAndStartWorking (endpoint) {
         .on('connect', function()
         {
             log.debug('Job Tube connected successfully');
-            jobClient.watch(BEANSTALK_WORKTUBE_NAME, function(err, numwatched) {
-                jobClient.reserve(function(err, jobid, payload) {
-                    if(!err) {
-                        processJob(jobid, payload, jobClient);
-                    }
-                });
-            });
+            reserveNextJob(jobClient);
+
         })
         .connect();
 
@@ -75,15 +70,26 @@ function connectToQueuesAndStartWorking (endpoint) {
         .connect();
 }
 
+function reserveNextJob () {
+    jobClient.watch(BEANSTALK_WORKTUBE_NAME, function(err, numwatched) {
+        jobClient.reserve(function(err, jobid, payload) {
+            if(!err) {
+                processJob(jobid, payload, jobClient);
+            }
+        });
+    });
+}
+
 // Dummy job here for now
 // Simply wait some random amount between 0 - 10 seconds and then mark the job as done
 function processJob (jobId, jobPayload, client) {
-    log.debug("Working on: " + jobId);
+    log.debug("Working on: " + jobId + " | Payload: " + jobPayload);
     setTimeout( function () {
         client.destroy(jobId, function(err) {
             log.debug("Done with: " + jobId);
 
-            postResult("Done with Job: " + jobId);
+            // Post the result as the same job payload
+            postResult("/" + jobPayload);
         });        
     },
     Math.floor(Math.random() * 10 * 1000));
@@ -91,9 +97,12 @@ function processJob (jobId, jobPayload, client) {
 
 function postResult (resultPayload, client) {
 
-    resultClient.put(0, 999, 0, resultPayload, function(err, jobid) {
+    resultClient.put(0, 0, 120, resultPayload, function(err, jobid) {
         if(err) {
             log.error(err);
+        } else {
+            // Reserve the next job
+            setImmediate(reserveNextJob);
         }
     });
 }
