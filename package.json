@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/SidBala/BuildWorker/issues"
   },
-  "homepage": "https://github.com/SidBala/BuildWorker"
+  "homepage": "https://github.com/SidBala/BuildWorker",
+  "dependencies": {
+    "fivebeans": "^1.1.1",
+    "node-etcd": "^3.0.2"
+  }
 }
