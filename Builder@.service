@@ -1,0 +1,12 @@
+[Unit]
+Description=Android builder service
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill builder
+ExecStartPre=-/usr/bin/docker rm builder
+ExecStartPre=/usr/bin/docker pull lasr/builder
+ExecStart=/usr/bin/docker run --name builder lasr/builder
+ExecStop=/usr/bin/docker stop builder
